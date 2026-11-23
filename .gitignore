@@ -1,0 +1,13 @@
+﻿__pycache__/
+*.pyc
+.env
+*.db
+venv/
+.venv/
+bp_testdeps/
+data/.session_secret
+
+# Local application data
+data/*
+!data/.gitkeep
+Broker_Portal_Release_*.zip

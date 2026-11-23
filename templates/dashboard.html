@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-shell">
+  <div class="dashboard-hero">
+    <div><div class="eyebrow">COMMAND CENTER</div><h1>Good to see you.</h1><p class="muted">Your inventory, clients and next actions — organized for the way a broker actually works.</p></div>
+    <div class="hero-actions"><a class="btn" href="{{ url_for('projects') }}">Browse projects</a>{% if current_role=='admin' %}<a class="btn primary" href="{{ url_for('admin') }}">Manage data</a>{% else %}<a class="btn primary" href="{{ url_for('clients') }}">Add client</a>{% endif %}</div>
+  </div>
+  <section class="card sales-target-card"><div class="section-heading"><div><div class="eyebrow">MONTHLY SALES TARGET</div><h2>{{ stats.sales_value|money_compact }} / {{ stats.target|money_compact }}</h2></div><strong>{{ stats.target_pct }}%</strong></div><div class="target-track"><span style="width:{{ stats.target_pct }}%"></span></div><div class="target-meta"><span>Won opportunities</span><span>{{ stats.pipeline['Hot'] }} Hot · {{ stats.pipeline['Viewing'] }} Viewing · {{ stats.pipeline['Negotiation'] }} Negotiation</span></div></section>
+  <section class="kpi-grid">
+    <a class="kpi-card" href="{{ url_for('projects') }}"><span class="kpi-icon">▦</span><div><span class="kpi-label">Live projects</span><strong>{{ stats.projects }}</strong><small>Published inventory</small></div></a>
+    <a class="kpi-card" href="{{ url_for('projects') }}"><span class="kpi-icon">◇</span><div><span class="kpi-label">Listings</span><strong>{{ stats.listings }}</strong><small>Searchable units</small></div></a>
+    <a class="kpi-card" href="{{ url_for('clients') }}"><span class="kpi-icon">◎</span><div><span class="kpi-label">Active clients</span><strong>{{ open_clients }}</strong><small>{{ clients_total }} total clients</small></div></a>
+    <a class="kpi-card accent" href="{{ url_for('clients') }}#followups"><span class="kpi-icon">◷</span><div><span class="kpi-label">Today's follow-ups</span><strong>{{ followups_today }}</strong><small>Calls that need attention</small></div></a>
+  </section>
+  <section class="dashboard-main-grid">
+    <div>
+      <div class="section-heading"><div><div class="eyebrow">ACTION CENTER</div><h2>Today's follow-ups</h2></div><a class="text-link" href="{{ url_for('clients') }}#followups">View follow-ups →</a></div>
+      <div class="dashboard-card">
+      {% for c in due_clients %}<div class="followup-row"><div class="avatar">{{ (c['name'] or '?')[0]|upper }}</div><div class="followup-info"><strong>{{ c['name'] }}</strong><span>{{ c['project'] or 'No project specified' }}{% if current_role=='admin' %} · {{ c['broker_email'] }}{% endif %}</span></div><div class="followup-time"><strong>{{ c['followup_at']|display_dt }}</strong><span>{{ c['status'] }}</span></div><div class="followup-quick"><a class="btn mini primary" href="tel:{{ c['phone'] }}">Call</a><form method="post" action="{{ url_for('complete_followup',client_id=c['id']) }}"><button class="btn mini" type="submit">Done</button></form></div></div>{% else %}<div class="empty-dashboard"><div class="empty-mark">✓</div><strong>You're clear for now.</strong><span>No overdue follow-ups at the moment.</span><a class="text-link" href="{{ url_for('clients') }}">Open Client Sheet →</a></div>{% endfor %}
+      </div>
+    </div>
+    <aside>
+      <div class="section-heading"><div><div class="eyebrow">QUICK ACTIONS</div><h2>Jump in</h2></div></div>
+      <div class="quick-actions-grid">
+        <a href="{{ url_for('clients') }}" class="action-tile"><span class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span><div><strong>Add client</strong><span>Create a lead and schedule the next call.</span></div><b>→</b></a>
+        <a href="{{ url_for('projects') }}" class="action-tile"><span class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><div><strong>Find project</strong><span>Search by project, price, size or location.</span></div><b>→</b></a>
+        <a href="{{ url_for('clients') }}#followups" class="action-tile"><span class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><div><strong>Review follow-ups</strong><span>See overdue and upcoming calls.</span></div><b>→</b></a>
+        {% if current_role=='admin' %}<a href="{{ url_for('admin') }}" class="action-tile"><span class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><div><strong>Update inventory</strong><span>Upload, validate and publish Excel.</span></div><b>→</b></a>{% endif %}
+      </div>
+    </aside>
+  </section>
+  <section class="dashboard-card recent-panel">
+    <div class="section-heading"><div><div class="eyebrow">CRM</div><h2>Recent clients</h2></div><a class="text-link" href="{{ url_for('clients') }}">Open Client Sheet →</a></div>
+    {% for c in recent_clients %}<a class="recent-row" href="tel:{{ c['phone'] }}"><div class="avatar mini">{{ (c['name'] or '?')[0]|upper }}</div><div class="recent-main"><strong>{{ c['name'] }}</strong><span>{{ c['project'] or 'No project' }}{% if current_role=='admin' %} · {{ c['broker_email'] }}{% endif %}</span></div><span class="status-pill">{{ c['status'] }}</span><span class="recent-phone">{{ c['phone'] }}</span></a>{% else %}<div class="empty-dashboard"><span>No clients added yet.</span><a class="text-link" href="{{ url_for('clients') }}">Add your first client →</a></div>{% endfor %}
+  </section>
+  {% if upcoming_clients %}<section style="margin-top:18px"><div class="section-heading"><div><div class="eyebrow">TODAY</div><h2>Upcoming calls</h2></div></div><div class="followup-strip">{% for c in upcoming_clients %}<a class="followup-mini" href="tel:{{ c['phone'] }}"><small>{{ c['followup_at']|display_dt }}</small><strong>{{ c['name'] }}</strong><span>{{ c['project'] or 'No project' }} · {{ c['status'] }}</span></a>{% endfor %}</div></section>{% endif %}
+  <div class="dashboard-footer-note"><span>Inventory</span><strong>{{ stats.last_status|title }}</strong><span>Last upload: {{ stats.last_upload|display_dt }}</span>{% if stats.warnings %}<span class="warning-note">{{ stats.warnings }} import warning{{ '' if stats.warnings==1 else 's' }}</span>{% endif %}</div>
+</div>
+{% endblock %}

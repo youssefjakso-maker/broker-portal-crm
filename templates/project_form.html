@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('admin') }}">← Back to Data Management</a>
+<div class="page-head"><div><div class="eyebrow">ADMIN · MANUAL INVENTORY</div><h1>Add project manually</h1><p class="muted">Create the project once, then add as many unit records as needed. This inventory is independent from Excel imports.</p></div><a class="btn" href="{{ url_for('admin_ai_project_import') }}">✦ Use AI Project Builder</a></div>
+<form method="post" class="card admin-edit-form project-form">
+  <h2>Project information</h2>
+  <div class="form-two"><label>Project name *<input name="project" required placeholder="Project name"></label><label>Developer *<input name="developer" required placeholder="Developer name"></label></div>
+  <div class="form-two"><label>Controlled area / Location *<input name="location" required placeholder="Sheikh Zayed or New Zayed"></label><label>Project location<input name="project_location" placeholder="Address / landmarks"></label></div>
+  <label>Company location<input name="company_location" placeholder="Company / sales office location"></label>
+  <label>Project description<textarea name="description" rows="4" placeholder="Overview, key details, nearby landmarks..."></textarea></label>
+  <div class="page-actions"><button class="btn primary" type="submit">Create project</button><a class="btn" href="{{ url_for('admin') }}">Cancel</a></div>
+</form>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('admin') }}">← Back to Data Management</a>
+<div class="page-head"><div><div class="eyebrow">ADMIN · PROJECT BUILDER</div><h1>AI Project Builder</h1><p class="muted">Paste a raw developer or WhatsApp summary. Review the extracted project details and unit records before anything enters inventory.</p></div><div class="page-actions"><span class="status-pill">REVIEW BEFORE CREATE</span></div></div>
+<section class="card ai-import-source">
+  <div class="section-heading"><div><div class="eyebrow">01 · SOURCE SUMMARY</div><h2>Paste project information</h2><p class="muted">Keep the original wording. You can paste mixed Arabic/English notes, prices and payment details.</p></div></div>
+  <form method="post" action="{{ url_for('admin_ai_project_import') }}">
+    <textarea class="ai-source-textarea" name="source_text" required placeholder="Example:\nBellagio AquaHeights by Convoy\nAin Sokhna, K116 Zafarana Road\nDelivery 2027\nFully finished and furnished\n30% down payment, 5 years\n58m garden 3.55M\n67m roof 4.2M">{{ source_text }}</textarea>
+    <div class="update-form-footer"><span class="muted">Analyze creates a draft only. It does not save inventory.</span><button class="btn primary" type="submit">Analyze Summary →</button></div>
+  </form>
+</section>
+{% if draft %}
+<form method="post" action="{{ url_for('admin_ai_project_create') }}" id="aiProjectCreateForm">
+  <input type="hidden" name="unit_count" value="{{ draft.units|length }}">
+  <input type="hidden" name="source_text" value="{{ draft.source_text }}">
+  <section class="card ai-review-card">
+    <div class="section-heading"><div><div class="eyebrow">02 · PROJECT REVIEW</div><h2>Review project details</h2><p class="muted">All fields are editable. Missing information stays blank; nothing is guessed.</p></div><span class="status-pill">DRAFT · NOT SAVED</span></div>
+    <div class="ai-fields-grid">
+      {% for key,label,required in [('project','Project name',true),('developer','Developer',true),('location','Controlled area / Location',true),('project_location','Project address / landmarks',false),('company_location','Company location',false),('delivery','Delivery',false),('finishing','Finishing / Furnishing',false),('maintenance','Maintenance',false),('payment_plan','Payment plan',false),('bedrooms','Bedrooms (general)',false)] %}
+      <label>{{ label }}{% if required %} *{% endif %}<input name="{{ key }}" value="{{ draft[key] }}" {% if required %}required{% endif %} placeholder="Not detected — enter manually"></label>
+      {% endfor %}
+    </div>
+    <label>Project description<textarea name="description" rows="3">{{ draft.description }}</textarea></label>
+  </section>
+  <section class="card ai-review-card">
+    <div class="section-heading"><div><div class="eyebrow">03 · UNIT EXTRACTION</div><h2>{{ draft.units|length }} unit record(s) detected</h2><p class="muted">Each unit is created under this project. Check its area, price, type and payment plan.</p></div></div>
+    {% if draft.units %}
+      {% for u in draft.units %}
+      <article class="ai-unit-card">
+        <div class="ai-unit-head"><strong>UNIT {{ '%02d'|format(loop.index) }}</strong><span class="status-pill">EXTRACTED · REVIEW REQUIRED</span></div>
+        <div class="ai-fields-grid">
+          <label>Unit type<select name="units-{{ loop.index0 }}-unit_type">{% for t in ['Apartment','Chalet','Villa','Townhouse','Twin House','Duplex','Studio','Commercial','Office','Other'] %}<option value="{{ t }}" {% if u.unit_type==t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+          <label>Built-up area<input name="units-{{ loop.index0 }}-space" value="{{ u.space }}" placeholder="Not detected"></label>
+          <label>Total price<input name="units-{{ loop.index0 }}-total_price" value="{{ u.total_price }}" placeholder="Not detected"></label>
+          <label>Price / m²<input name="units-{{ loop.index0 }}-price_m2" value="{{ u.price_m2 }}" placeholder="Not detected"></label>
+          <label>Payment plan<input name="units-{{ loop.index0 }}-payment_plan" value="{{ u.payment_plan }}" placeholder="Not detected"></label>
+          <label>Delivery<input name="units-{{ loop.index0 }}-delivery" value="{{ u.delivery }}" placeholder="Not detected"></label>
+          <label>Finishing<input name="units-{{ loop.index0 }}-finishing" value="{{ u.finishing }}" placeholder="Not detected"></label>
+          <label>Maintenance<input name="units-{{ loop.index0 }}-maintenance" value="{{ u.maintenance }}" placeholder="Not detected"></label>
+        </div>
+        <label>Additional details<textarea name="units-{{ loop.index0 }}-additional_fields" rows="2" placeholder="Bedrooms: 2&#10;Outdoor: Garden">{{ u.additional_fields }}</textarea></label>
+        <label class="ai-source-line">Source text for this unit<input name="units-{{ loop.index0 }}-source_line" value="{{ u.source_line }}" readonly></label>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="review-warning"><strong>No unit records confidently detected.</strong> You can still create the project, then correct the extracted fields or add the missing values in the review form.</div>
+    {% endif %}
+    <div class="review-warning"><strong>Important:</strong> This build uses conservative local extraction rules, not a connected external AI model. Verify every value against the pasted source. Unknown fields are intentionally left blank.</div>
+    <div class="page-actions ai-create-actions"><a class="btn" href="{{ url_for('admin_ai_project_import') }}">Start over</a><button class="btn primary" type="submit" onclick="return confirm('Create this project and its reviewed units in the inventory?')">Confirm & Create Project</button></div>
+  </section>
+</form>
+{% endif %}
+{% endblock %}

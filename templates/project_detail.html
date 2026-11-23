@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('projects') }}">← Back to projects</a>
+<div class="page-head"><div><div class="eyebrow">PROJECT OVERVIEW</div><h1>{{ project.project }}</h1><p class="muted">{{ project.developer }} · {{ project.location }}</p></div><div class="page-actions">{% if current_role=='admin' and manual_id %}<a class="btn" href="{{ url_for('admin_manual_project',project_id=manual_id) }}">Manage project</a>{% endif %}<a class="btn primary" href="{{ url_for('clients',project=project.project) }}">Offer to client</a></div></div>
+{% if project.description %}<section class="card project-description"><h3>About this project</h3><p>{{ project.description }}</p></section>{% endif %}
+<section class="card project-overview-grid"><div><small>Developer</small><strong>{{ project.developer or '—' }}</strong></div><div><small>Location</small><strong>{{ project.location or '—' }}</strong></div><div><small>Units listed</small><strong>{{ units|length }}</strong></div><div><small>Unit types</small><strong>{{ unit_types|join(' · ') or '—' }}</strong></div>{% if project.project_location %}<div><small>Project location</small><strong>{{ project.project_location }}</strong></div>{% endif %}{% if project.company_location %}<div><small>Company location</small><strong>{{ project.company_location }}</strong></div>{% endif %}</section>
+<section class="card"><div class="section-heading"><div><div class="eyebrow">INVENTORY</div><h2>Available units</h2><p class="muted">Each row is a separate unit or offer from the source data.</p></div><span class="status-pill">{{ units|length }} units</span></div>
+<div class="unit-table-wrap"><table class="unit-table"><thead><tr><th>Unit</th><th>Space</th><th>Total price</th><th>Price / m²</th><th>Payment plan</th><th>Delivery</th><th></th></tr></thead><tbody>
+{% for u in units %}<tr><td><strong>{{ u.unit_type or 'Unit' }}</strong>{% if u.source_type=='manual' %}<small class="source-pill">MANUAL</small>{% endif %}</td><td>{{ u.space_display or '—' }}</td><td class="unit-price">{{ u.price_display or 'Price on request' }}</td><td>{{ u.m2_display or '—' }}</td><td>{{ u.payment_plan or '—' }}</td><td>{{ u.delivery or '—' }}</td><td><a class="btn mini" href="{{ url_for('listing_detail',listing_id=u.id) }}">Details</a></td></tr>
+{% else %}<tr><td colspan="7">No units are currently available in this project.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

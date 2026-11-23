@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">CRM WORKSPACE</div><h1>Clients</h1><p class="muted">Fast lead capture first. Qualification and CRM details come after the call.</p></div></div>
+{% if due_clients %}<div class="client-alert" id="followups">{{ due_clients|length }} follow-up(s) need attention.</div>{% else %}<div id="followups"></div>{% endif %}
+<div class="followup-strip">{% for c in due_clients[:4] %}<div class="followup-mini"><small>Overdue · {{ c.followup_at|display_dt }}</small><strong><a href="{{ url_for('client_detail',client_id=c.id) }}">{{ c.name }}</a></strong><span>{{ c.project or 'No project' }} · {{ c.status }}</span><form method="post" action="{{ url_for('complete_followup',client_id=c.id) }}"><button class="linkbtn">Mark done</button></form></div>{% else %}<div class="followup-mini"><small>Follow-ups</small><strong>You're clear</strong><span>No overdue calls right now.</span></div>{% endfor %}</div>
+<div class="client-layout">
+<section class="card" style="padding:18px">
+  <div class="section-heading"><div><div class="eyebrow">PIPELINE</div><h2>Client list</h2></div><span class="status-pill">{{ clients|length }} shown</span></div>
+  <form class="card filters" style="margin:0 0 18px;padding:14px" method="get">
+    <div class="filter-top"><div class="search-large"><span>⌕</span><input name="q" value="{{ client_filters.q }}" placeholder="Search name, mobile or project..."></div><button class="btn primary" type="submit">Search</button></div>
+    <div class="advanced">
+      <label>Status<select name="status"><option value="">All stages</option>{% for x in ['Pending','Contacted','Interested','Viewing','Negotiation','Not Interested','Closed'] %}<option value="{{ x }}" {% if client_filters.status==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+      <label>Temperature<select name="temperature"><option value="">All temperatures</option>{% for x in ['Hot','Warm','Cold'] %}<option value="{{ x }}" {% if client_filters.temperature==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+      <label>Follow-up<select name="follow"><option value="">Any follow-up</option><option value="today" {% if client_filters.follow=='today' %}selected{% endif %}>Today</option></select></label>
+    </div>
+    <div class="filter-actions"><span class="muted">Use filters to keep the list focused on the calls that matter.</span><a class="btn" href="{{ url_for('clients') }}">Clear</a></div>
+  </form>
+  <div class="client-list">
+  {% for c in clients %}<article class="client-card"><div class="client-top"><div><h3><a href="{{ url_for('client_detail',client_id=c.id) }}">{{ c.name }}</a></h3><a class="phone-link" href="tel:{{ c.phone }}">{{ c.phone }}</a>{% if c.project %}<div class="muted" style="font-size:12px;margin-top:4px">{{ c.project }}</div>{% endif %}{% if not c.preferred_locations_list and not c.preferred_location %}<div class="incomplete-badge">Incomplete profile</div>{% endif %}</div><div class="client-badges"><span class="temp-pill {{ (c.temperature or 'Warm')|lower|replace(' ','-') }}">{{ c.temperature or 'Warm' }}</span><span class="status-pill">{{ c.status }}</span></div></div>
+  <div class="client-meta">{% if c.budget %}<span><b>Total Budget (EGP)</b>{{ c.budget|budget }}</span>{% endif %}{% if c.property_category %}<span><b>Category</b>{{ c.property_category }}</span>{% endif %}{% if c.preferred_locations_list %}<span><b>Areas</b>{{ c.preferred_locations_list|join(', ') }}</span>{% elif c.preferred_location %}<span><b>Area</b>{{ c.preferred_location }}</span>{% endif %}{% if c.preferred_unit_type or c.unit_type %}<span><b>Unit</b>{{ c.preferred_unit_type or c.unit_type }}</span>{% endif %}{% if c.priority and c.priority!='Normal' %}<span><b>Priority</b>{{ c.priority }}</span>{% endif %}{% if c.next_action %}<span><b>Next</b>{{ c.next_action }}</span>{% endif %}{% if c.followup_at %}<span><b>Follow-up</b>{{ c.followup_at|display_dt }}</span>{% endif %}</div>
+  <div class="client-actions"><a class="btn primary" href="{{ url_for('client_detail',client_id=c.id) }}">Open CRM</a><a class="btn" href="tel:{{ c.phone }}">Call</a><form method="post" action="{{ url_for('update_client_status',client_id=c.id) }}"><select name="status" onchange="this.form.submit()">{% for st in ['Pending','Contacted','Interested','Viewing','Negotiation','Not Interested','Closed'] %}<option value="{{ st }}" {% if c.status==st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></form></div></article>
+  {% else %}<div class="empty-state">No clients match the current filters.</div>{% endfor %}
+  </div>
+</section>
+<section class="card" style="padding:20px;position:sticky;top:94px"><div class="eyebrow">NEW LEAD</div><h2 style="font-size:22px">Add client</h2><p class="muted" style="font-size:12px">Capture only what you need during the call. Everything else can be added later.</p>
+<form method="post" action="{{ url_for('add_client') }}" class="client-form">
+{% if current_role=='admin' %}<label>Assign to broker<select name="assigned_to"><option value="">Keep with admin</option>{% for b in brokers %}<option value="{{ b.id }}">{{ b.email }}</option>{% endfor %}</select></label>{% endif %}
+<label>Client name<input name="name" required placeholder="Ahmed Mohamed"></label>
+<label>Mobile number<input name="phone" required type="tel" placeholder="01xxxxxxxxx"></label>
+<label>Property category<select name="property_category"><option value="">Not specified</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select></label>
+<label>Total budget (EGP) — Full Property Price<input name="budget" placeholder="e.g. 5,000,000"></label>
+<label>Preferred locations (hold Ctrl/Cmd for multiple)<select name="preferred_locations" multiple size="6">{% for area in location_options %}<option value="{{ area }}">{{ area }}</option>{% endfor %}</select></label>
+<label>Custom locations (comma separated)<input name="preferred_locations_text" placeholder="e.g. Sheikh Zayed, 6 October"></label>
+<label>Preferred unit type<select name="preferred_unit_type"><option value="">Any</option><option value="Residential">Residential (RES)</option>{% for x in ['Apartment','Chalet','Villa','Townhouse','Twin House','Studio','Hotel Apartment','Commercial'] %}<option value="{{ x }}">{{ x }}</option>{% endfor %}</select></label>
+<div class="form-two"><label>Min/Max area (m²)<input name="preferred_space" placeholder="e.g. 120-180"></label><label>Bedrooms<input name="bedrooms" placeholder="e.g. 3"></label></div>
+<div class="form-two"><label>Bathrooms<input name="bathrooms" placeholder="e.g. 2"></label><label>Preferred developer<input name="preferred_developer" placeholder="Optional"></label></div>
+<label>Purpose<select name="purpose"><option value="">Not specified</option>{% for x in ['Personal use','Investment','Business','Other'] %}<option value="{{ x }}">{{ x }}</option>{% endfor %}</select></label>
+<label>Priority<select name="priority"><option value="Normal">Normal</option><option value="High">High</option><option value="Low">Low</option></select></label>
+<label>Notes<textarea name="notes" rows="3" placeholder="Client notes"></textarea></label>
+<button class="btn primary wide" type="submit">Create client profile</button>
+</form></section>
+</div>
+{% endblock %}

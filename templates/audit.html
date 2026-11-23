@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('admin') }}">← Back to Data Management</a>
+<div class="page-head"><div><div class="eyebrow">ADMIN · ACTIVITY RECORD</div><h1>Audit log</h1><p class="muted">Who performed an administrative or CRM action, and when.</p></div></div>
+<section class="card"><div class="table-wrap"><table><thead><tr><th>Time</th><th>Account</th><th>Action</th><th>Record</th><th>Details</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.created_at[:19].replace('T',' ') }}</td><td>{{ r.actor_email or 'System' }}</td><td><strong>{{ r.action }}</strong></td><td>{{ r.entity_type }}{% if r.entity_id %} #{{ r.entity_id }}{% endif %}</td><td class="audit-details">{{ r.details }}</td></tr>{% else %}<tr><td colspan="5">No audit events recorded yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

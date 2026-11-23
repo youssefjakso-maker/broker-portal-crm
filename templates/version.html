@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{url_for('admin')}}">← Back to Admin</a>
+<div class="page-head"><div><div class="eyebrow">{{version.status|upper}}</div><h1>{{version.filename}}</h1><p class="muted">Imported {{version.created_at[:19]}}</p></div></div>
+
+<div class="stat-grid card">
+<div><small>Total rows</small><strong>{{version.total_rows}}</strong></div>
+<div><small>Imported</small><strong>{{version.imported_rows}}</strong></div>
+<div><small>Rejected</small><strong>{{version.rejected_rows}}</strong></div>
+<div><small>Warnings</small><strong>{{version.warnings}}</strong></div><div><small>Info</small><strong>{{summary.info or 0}}</strong></div>
+<div><small>Serious errors</small><strong>{{version.serious_errors}}</strong></div>
+</div>
+
+{% if version.status == 'draft' %}
+<div class="card action-panel">
+{% if version.serious_errors == 0 %}
+<form method="post" action="{{url_for('publish',version_id=version.id)}}"><button class="btn primary">Publish this draft</button></form>
+{% else %}<strong>This draft cannot be published until serious errors are resolved.</strong>{% endif %}
+</div>
+{% elif version.status == 'archived' %}
+<div class="card action-panel"><form method="post" action="{{url_for('restore',version_id=version.id)}}"><button class="btn primary">Restore as Live</button></form></div>
+{% endif %}
+
+{% if summary.info_messages %}
+<section class="card info-card">
+<h2>Informational Notes ({{summary.info}})</h2>
+<div class="warning-list">{% for x in summary.info_messages %}<div>{{x}}</div>{% endfor %}</div>
+</section>
+{% endif %}
+{% if summary.warning_messages %}
+<section class="card">
+<h2>Warnings ({{summary.warnings}})</h2>
+<div class="warning-list">{% for x in summary.warning_messages %}<div>{{x}}</div>{% endfor %}</div>
+</section>
+{% endif %}
+{% if summary.serious_messages %}
+<section class="card danger">
+<h2>Serious Errors ({{summary.serious_errors}})</h2>
+<div class="warning-list">{% for x in summary.serious_messages %}<div>{{x}}</div>{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="back" href="{{ url_for('admin') }}">← Back to Data Management</a>
+<div class="page-head"><div><div class="eyebrow">ADMIN · MANUAL PROJECT</div><h1>{{ project.project }}</h1><p class="muted">{{ project.developer }} · {{ project.location }} · {{ units|length }} units</p></div><div class="page-actions"><a class="btn" href="{{ url_for('projects') }}">View broker view</a><form method="post" action="{{ url_for('admin_archive_manual_project',project_id=project.id) }}"><button class="btn danger" type="submit">{{ 'Restore project' if not project.active else 'Archive project' }}</button></form></div></div>
+<div class="manual-project-grid">
+<section class="card"><div class="section-heading"><div><div class="eyebrow">PROJECT DETAILS</div><h2>Edit project information</h2></div><span class="source-pill">MANUAL</span></div>
+<form method="post" action="{{ url_for('admin_edit_manual_project',project_id=project.id) }}" class="client-form">
+<div class="form-two"><label>Project name *<input name="project" value="{{ project.project }}" required></label><label>Developer *<input name="developer" value="{{ project.developer }}" required></label></div>
+<div class="form-two"><label>Location *<input name="location" value="{{ project.location }}" required></label><label>Project location<input name="project_location" value="{{ project.project_location or '' }}"></label></div>
+<label>Company location<input name="company_location" value="{{ project.company_location or '' }}"></label>
+<label>Description<textarea name="description" rows="4">{{ project.description or '' }}</textarea></label>
+<button class="btn primary" type="submit">Save project</button></form></section>
+<section class="card">{% if project.active %}<div class="section-heading"><div><div class="eyebrow">ADD INVENTORY</div><h2>Add a unit</h2><p class="muted">You can add another unit at any time.</p></div></div>
+<form method="post" action="{{ url_for('admin_add_manual_unit',project_id=project.id) }}" class="client-form">
+<div class="form-two"><label>Unit type *<select name="unit_type" required><option value="">Select type</option>{% for x in ['Apartment','Chalet','Villa','Townhouse','Twin House','Duplex','Studio','Commercial','Other'] %}<option>{{ x }}</option>{% endfor %}</select></label><label>Space / range<input name="space" placeholder="150 or 120-160"></label></div>
+<div class="form-two"><label>Total price<input name="total_price" placeholder="5M or 4M-6M"></label><label>Price / m²<input name="price_m2" placeholder="25K or leave blank"></label></div>
+<label>Payment plan<textarea name="payment_plan" rows="3" placeholder="Down payment, installments, years..."></textarea></label>
+<div class="form-two"><label>Delivery<input name="delivery" placeholder="2028 / Ready to move"></label><label>Finishing<input name="finishing" placeholder="Fully finished / Core & Shell"></label></div>
+<label>Maintenance<input name="maintenance" placeholder="Maintenance amount / percentage"></label>
+<label>Additional fields<textarea name="additional_fields" rows="3" placeholder="Garden: 60 m²&#10;Floor: 3&#10;View: Landscape"></textarea><small class="muted">One per line, in Field name: value format.</small></label>
+<button class="btn primary wide" type="submit">Add unit to project</button></form>{% else %}<div class="empty-state">This project is archived. Restore it before adding more units.</div>{% endif %}</section>
+</div>
+<section class="card"><div class="section-heading"><div><div class="eyebrow">PROJECT INVENTORY</div><h2>Units</h2></div><span class="status-pill">{{ units|length }}</span></div><div class="table-wrap"><table><thead><tr><th>Unit</th><th>Size</th><th>Price</th><th>Price/m²</th><th>Payment plan</th><th>Delivery</th><th>Actions</th></tr></thead><tbody>
+{% for u in units %}<tr><td>{{ u.unit_type }}</td><td>{{ u.space_display or '—' }}</td><td>{{ u.price_display or '—' }}</td><td>{{ u.m2_display or '—' }}</td><td>{{ u.payment_plan or '—' }}</td><td>{{ u.delivery or '—' }}</td><td><a class="linkbtn" href="{{ url_for('edit_listing',listing_id=u.id) }}">Edit</a> <form method="post" class="inline" action="{{ url_for('admin_delete_manual_unit',listing_id=u.id) }}" onsubmit="return confirm('Delete this unit?')"><button class="linkbtn danger-text">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="7">No units yet. Add the first unit using the form above.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

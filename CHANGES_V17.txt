@@ -1,0 +1,34 @@
+BROKER PORTAL V17 - MATCHING + - Budget cap: recommendations go up to (stated budget + 2M): 8M -> 10M, 12M -> 14M. Nothing that STARTS above that is shown.
+  Projects starting above the stated budget (inside the +2M margin) are at most "Good Alternative".
+  The Budget flexibility dropdown no longer changes the upper limit.
+- Same location only: recommendations need a Preferred location and show only that location.
+- Adding a client with Project / Offered price now creates an Opportunity (and a timeline entry) on the client's page,
+  linked to the unit when the project name matches exactly one inventory row. Opportunities show a "View unit" link.
+
+SECURITY
+=======================================
+
+SMART MATCH
+- Wide price ranges (e.g. 7.8M-61M) are no longer excluded. A project now matches on its STARTING price:
+  starting price inside the client's budget window = strong fit.
+- If only the range reaches the budget (starts below it), the project is kept but capped at "Good Alternative"
+  and the reason says "confirm the exact unit".
+- A project whose starting price fits the budget is at least a "Good Alternative" even if the client
+  did not specify location/unit type.
+- Projects that START above the client's budget window are no longer shown at all. The old code had a hidden +30% margin
+  (8M client, Flexible: was shown 15.6M-27.9M projects as "stretch").
+- Test on the company workbook (218 rows), budget 8M, New Cairo: 13 results -> 26. 8M any area: 81 -> 155.
+
+SECURITY
+- CSRF token on every POST form and on fetch() calls (favorite). Requests without a valid token get HTTP 400.
+- Accounts still using a default password (Admin123!/Broker123!), newly created brokers, and brokers whose
+  password was reset by Admin must set a new password at next login. The default password cannot be reused.
+- Login throttle: 5 failed attempts per IP+email -> locked 15 minutes (in-memory; resets on restart).
+- Session cookie: HttpOnly, SameSite=Lax, 12-hour lifetime. Set BROKER_PORTAL_HTTPS=1 when served over HTTPS.
+- Security headers: CSP, X-Frame-Options, nosniff, Referrer-Policy, no-store caching.
+- Demo credentials removed from the login page.
+- run_portal.bat now listens on 127.0.0.1 (this computer only). For the office network, set
+  BROKER_PORTAL_HOST=0.0.0.0 before running (and only on a private network/VPN).
+
+UPGRADE
+- Keep your existing data/ folder. The DB migrates automatically (adds users.must_change_password).

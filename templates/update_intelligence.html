@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">ADMIN · UPDATE INTELLIGENCE</div>
+    <h1>WhatsApp → Update Intelligence</h1>
+    <p class="muted">Paste the latest project messages. The CRM organizes likely changes without touching live inventory.</p>
+  </div>
+  <div class="page-actions"><span class="status-pill">REVIEW-FIRST</span><a class="btn" href="{{ url_for('admin') }}">Back to Control Center</a></div>
+</div>
+
+<section class="update-intel-grid">
+  <div class="card update-input-card">
+    <div class="section-heading"><div><div class="eyebrow">01 · SOURCE</div><h2>Paste WhatsApp updates</h2><p class="muted">Keep the original wording. You can paste a full batch from one or multiple project groups.</p></div></div>
+    <form method="post" id="updateIntelForm">
+      <textarea class="update-textarea" name="source_text" placeholder="Paste WhatsApp messages here...">{{ source_text }}</textarea>
+      <div class="update-form-footer"><span class="muted">No inventory is changed by Analyze.</span><button class="btn primary" type="submit">Analyze Updates →</button></div>
+    </form>
+  </div>
+
+  <div class="card update-how-card">
+    <div class="eyebrow">CONTROL MODEL</div><h2>Human in the loop.</h2>
+    <div class="intel-step"><b>01</b><span>Paste WhatsApp messages</span></div>
+    <div class="intel-step"><b>02</b><span>Detect projects + update types</span></div>
+    <div class="intel-step"><b>03</b><span>Copy the structured summary</span></div>
+    <div class="intel-step"><b>04</b><span>Admin verifies and edits Inventory</span></div>
+    <p class="muted small-note">This first version deliberately does not auto-edit prices, units, or availability.</p>
+  </div>
+</section>
+
+{% if summary %}
+<section class="card update-results-card">
+  <div class="section-heading"><div><div class="eyebrow">02 · DETECTED CHANGES</div><h2>{{ summary.projects_affected }} projects · {{ summary.updates_detected }} updates</h2><p class="muted">Detected from {{ summary.source_lines }} pasted lines. Confidence is a review aid, not an approval.</p></div><button class="btn primary" type="button" id="copySummary">Copy Full Summary</button></div>
+  <textarea id="summaryCopySource" class="visually-hidden-copy">{{ summary_text }}</textarea>
+  {% for group in summary.groups %}
+  <article class="update-project-block">
+    <div class="update-project-head"><div><span class="update-index">{{ '%02d'|format(loop.index) }}</span><h3>{{ group.project }}</h3></div><span class="status-pill">{{ group.updates|length }} update{% if group.updates|length != 1 %}s{% endif %}</span></div>
+    <div class="update-list">
+      {% for u in group.updates %}
+      <div class="update-row">
+        <div><span class="update-type">{{ u.type }}</span><p>{{ u.source_line }}</p></div>
+        <div class="update-confidence"><strong>{{ (u.confidence * 100)|round|int }}%</strong><small>match confidence</small></div>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+  <div class="review-warning"><strong>Admin review required.</strong> Verify each line against the original WhatsApp message before changing live inventory.</div>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="section-heading"><div><div class="eyebrow">03 · HISTORY</div><h2>Recent analyses</h2></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Created</th><th>Projects</th><th>Updates</th><th>Created by</th></tr></thead><tbody>
+  {% for h in history %}<tr><td>{{ h.created_at[:19] }}</td><td>Analysis</td><td>Saved</td><td>{{ h.creator or 'Admin' }}</td></tr>{% else %}<tr><td colspan="4">No analyses yet.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<script>
+(function(){
+  const btn=document.getElementById('copySummary'); const src=document.getElementById('summaryCopySource');
+  btn?.addEventListener('click', async()=>{try{await navigator.clipboard.writeText(src.value);btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy Full Summary',1400);}catch(e){src.classList.remove('visually-hidden-copy');src.select();document.execCommand('copy');src.classList.add('visually-hidden-copy');btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy Full Summary',1400);}});
+})();
+</script>
+{% endblock %}

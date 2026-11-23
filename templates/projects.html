@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">LIVE INVENTORY</div><h1>Projects</h1><p class="muted">Browse projects first, then open the available units inside each project.</p></div><div class="page-actions"><a class="btn" href="{{ url_for('clients') }}">+ Add client</a></div></div>
+{% if live or projects %}
+<form class="card filters" method="get" id="propertyFilters">
+  <div class="filter-top"><div class="search-large"><span>⌕</span><input name="q" value="{{ request.args.get('q','') }}" placeholder="Search projects, developers, locations or unit types..."></div><button class="btn primary" type="submit">Search</button></div>
+  <div class="advanced">
+    <label>Developer<select name="developer"><option value="">All developers</option>{% for x in filters.developers %}<option value="{{ x }}" {% if request.args.get('developer')==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+    <label>Project<select name="project"><option value="">All projects</option>{% for x in filters.projects %}<option value="{{ x }}" {% if request.args.get('project')==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+    <label>Location<select name="location"><option value="">All locations</option>{% for x in filters.locations %}<option value="{{ x }}" {% if request.args.get('location')==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+    <label>Unit type<select name="unit_type"><option value="">All types</option>{% for x in filters.unit_types %}<option value="{{ x }}" {% if request.args.get('unit_type')==x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></label>
+    <label>Price min<input name="total_min" type="number" value="{{ request.args.get('total_min','') }}" placeholder="EGP"></label>
+    <label>Price max<input name="total_max" type="number" value="{{ request.args.get('total_max','') }}" placeholder="EGP"></label>
+    <label>Price/m² min<input name="m2_min" type="number" value="{{ request.args.get('m2_min','') }}"></label>
+    <label>Price/m² max<input name="m2_max" type="number" value="{{ request.args.get('m2_max','') }}"></label>
+    <label>Space min<input name="space_min" type="number" value="{{ request.args.get('space_min','') }}"></label>
+    <label>Space max<input name="space_max" type="number" value="{{ request.args.get('space_max','') }}"></label>
+  </div>
+  <div class="filter-actions"><span class="muted">{{ listing_count }} matching unit(s) across {{ projects|length }} project(s)</span><div class="actions"><a class="btn" href="{{ url_for('projects') }}">Clear filters</a></div></div>
+</form>
+<div class="results-toolbar"><span class="results-count">Showing <strong>{{ projects|length }}</strong> of <strong>{{ total_projects }}</strong> projects</span></div>
+<div class="results grid-view project-groups">
+{% for p in projects %}
+<article class="card listing project-card">
+  <div class="project-card-head"><div class="project-card-copy"><div class="project-card-kicker"><span class="tag">{{ p.unit_count }} unit{{ '' if p.unit_count==1 else 's' }}</span><span class="project-label">PROJECT</span></div><h2>{{ p.project }}</h2><div class="project-developer">{{ p.developer }}</div><div class="project-location">⌖ {{ p.location }}</div></div>{% if p.source_type=='manual' %}<span class="source-pill">MANUAL</span>{% endif %}</div>
+  <div class="meta project-meta"><span><b>Unit types</b>{{ p.unit_types_display }}</span><span><b>Size range</b>{{ p.size_display or '—' }}</span><span><b>Delivery</b>{{ p.delivery or 'Various / confirm' }}</span></div>
+  <div class="project-card-footer"><div><small>Available price range</small><div class="price">{{ p.price_display or 'Price on request' }}</div></div>
+  {% if p.manual_project_id %}<a class="btn mini" href="{{ url_for('project_detail',manual_project_id=p.manual_project_id) }}">View units <span>→</span></a>{% else %}<a class="btn mini" href="{{ url_for('project_detail',project=p.project,developer=p.developer,location=p.location) }}">View units <span>→</span></a>{% endif %}</div>
+</article>
+{% else %}<div class="card empty">No projects match these filters. Try clearing one or more filters.</div>{% endfor %}
+</div>
+{% if total_pages > 1 %}<div class="pagination">{% set args=request.args.to_dict() %}{% if page>1 %}{% set _=args.update({'page':page-1}) %}<a class="btn" href="{{ url_for('projects', **args) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ total_pages }}</span>{% if page<total_pages %}{% set _=args.update({'page':page+1}) %}<a class="btn" href="{{ url_for('projects', **args) }}">Next →</a>{% endif %}</div>{% endif %}
+{% else %}<div class="card empty">No published inventory yet. The administrator needs to publish an Excel version or add a project manually.</div>{% endif %}
+{% endblock %}

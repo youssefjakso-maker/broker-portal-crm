@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{{ title or "Broker Portal" }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script>(function(){const m=document.querySelector('meta[name="csrf-token"]');const t=m?m.content:'';const f=window.fetch;window.fetch=function(u,o){o=o||{};const method=(o.method||'GET').toUpperCase();if(method!=='GET'&&method!=='HEAD'){o.headers=Object.assign({},o.headers||{},{'X-CSRF-Token':t});}return f.call(this,u,o);};})();</script>
+</head>
+<body>
+<div class="app-shell {% if not current_email %}public-shell{% endif %}">
+{% if current_email %}
+<aside class="sidebar" id="sidebar">
+  <div class="brand-block">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">B</span><span><b>Broker</b><small>Portal</small></span></a>
+    <button class="icon-btn sidebar-close" id="sidebarClose" aria-label="Close menu">×</button>
+  </div>
+  <div class="sidebar-scroll">
+    <div class="nav-label">Workspace</div>
+    <a class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+    <a class="nav-item {% if request.endpoint in ['projects','project_detail','listing_detail'] %}active{% endif %}" href="{{ url_for('projects') }}"><span class="nav-icon">▦</span><span>Projects</span></a>
+    <a class="nav-item {% if request.endpoint in ['clients','client_detail','add_client','update_client_status'] %}active{% endif %}" href="{{ url_for('clients') }}"><span class="nav-icon">◎</span><span>Clients</span>{% if notification_count %}<em class="nav-badge">{{ notification_count }}</em>{% endif %}</a>
+    <div class="nav-label management">Management</div>
+    {% if current_role=='admin' %}<a class="nav-item {% if request.endpoint in ['admin','version_detail','upload','publish','restore','users','admin_new_project','admin_ai_project_import','admin_ai_project_create','admin_manual_project','admin_edit_manual_project','admin_add_manual_unit','admin_archive_manual_project','admin_audit'] %}active{% endif %}" href="{{ url_for('admin') }}"><span class="nav-icon">⇧</span><span>Data Management</span></a>{% endif %}
+    {% if current_role=='admin' %}<a class="nav-item {% if request.endpoint=='update_intelligence' %}active{% endif %}" href="{{ url_for('update_intelligence') }}"><span class="nav-icon">✦</span><span>Update Intelligence</span></a>{% endif %}
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-mini"><span class="avatar mini">{{ (current_email or 'U')[0]|upper }}</span><div><strong>{{ current_email }}</strong><small>{{ current_role|title }}</small></div></div>
+    <a class="nav-item footer-link" href="{{ url_for('change_password') }}"><span class="nav-icon">⌑</span><span>Change password</span></a>
+    <a class="nav-item footer-link" href="{{ url_for('logout') }}"><span class="nav-icon">↪</span><span>Sign out</span></a>
+  </div>
+</aside>
+{% endif %}
+<div class="mobile-overlay" id="mobileOverlay"></div>
+{% if current_email %}
+<section class="app-main">
+<header class="app-header">
+  <div class="header-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button><div class="breadcrumb"><span>Broker Portal</span><i>/</i><strong>{{ title or ('Dashboard' if request.endpoint=='dashboard' else ('Projects' if request.endpoint in ['projects','project_detail','listing_detail'] else ('Clients' if request.endpoint in ['clients','client_detail'] else 'Workspace'))) }}</strong></div></div>
+  <div class="header-actions">
+    <button class="header-search" id="headerSearch"><span>⌕</span><span>Search anything</span><kbd>Ctrl K</kbd></button>
+    <button class="icon-btn notification-btn" id="notificationBtn" title="Follow-up notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>{% if notification_count %}<b>{{ notification_count }}</b>{% endif %}</button>
+    <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle theme" title="Toggle theme"><span id="themeIcon">☾</span></button>
+  </div>
+</header>
+{% else %}
+<section class="app-main">
+<button id="themeToggle" class="icon-btn theme-float" type="button" aria-label="Toggle theme" title="Toggle theme"><span id="themeIcon">☾</span></button>
+{% endif %}
+{% if current_email %}
+<main class="container">
+{% else %}
+<main class="public-main"><div class="container">
+{% endif %}
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="flash {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+{% block content %}{% endblock %}
+{% if current_email %}</main>
+</section>
+{% else %}</div></main>
+{% endif %}
+</div>
+<div class="command-overlay" id="commandOverlay" hidden><div class="command-box"><div class="command-head"><span>Quick Search</span><button class="icon-btn" id="closeSearch">×</button></div><div class="command-input-wrap"><span>⌕</span><input id="commandInput" autocomplete="off" placeholder="Search projects, developers, locations..."><kbd>ESC</kbd></div><div class="command-results" id="commandResults"></div><div class="command-hints" id="commandHints"><button data-command="dashboard">Go to Dashboard</button><button data-command="projects">Browse Projects</button><button data-command="clients">Open Clients</button>{% if current_role=='admin' %}<button data-command="admin">Data Management</button>{% endif %}</div><p class="command-tip">Type at least 2 letters. Search now finds normalized locations too.</p></div></div>
+<script>
+(function(){
+ const root=document.documentElement, saved=localStorage.getItem('broker-theme'); if(saved==='dark') root.classList.add('dark');
+ const syncTheme=()=>{const dark=root.classList.contains('dark');const i=document.getElementById('themeIcon');if(i)i.textContent=dark?'☀':'☾';};
+ document.addEventListener('DOMContentLoaded',()=>{
+  syncTheme(); const toggle=document.getElementById('themeToggle'); if(toggle)toggle.onclick=()=>{root.classList.toggle('dark');localStorage.setItem('broker-theme',root.classList.contains('dark')?'dark':'light');syncTheme();};
+  const side=document.getElementById('sidebar'), overlay=document.getElementById('mobileOverlay'); const open=()=>{side?.classList.add('open');overlay?.classList.add('show')}; const close=()=>{side?.classList.remove('open');overlay?.classList.remove('show')};
+  document.getElementById('mobileMenu')?.addEventListener('click',open); document.getElementById('sidebarClose')?.addEventListener('click',close); overlay?.addEventListener('click',close);
+  const overlayBox=document.getElementById('commandOverlay'), input=document.getElementById('commandInput'); const openSearch=()=>{if(!overlayBox)return;overlayBox.hidden=false;setTimeout(()=>input?.focus(),50)}; const closeSearch=()=>{if(overlayBox)overlayBox.hidden=true};
+  document.getElementById('openSearch')?.addEventListener('click',e=>{e.preventDefault();openSearch()}); document.getElementById('headerSearch')?.addEventListener('click',openSearch); document.getElementById('closeSearch')?.addEventListener('click',closeSearch); overlayBox?.addEventListener('click',e=>{if(e.target===overlayBox)closeSearch()});
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch()}if(e.key==='Escape')closeSearch()});
+  const results=document.getElementById('commandResults'), hints=document.getElementById('commandHints'); let searchTimer;
+  const renderResults=(items)=>{if(!results)return;results.innerHTML='';if(!items.length){results.classList.remove('show');if(hints)hints.style.display='grid';return;}if(hints)hints.style.display='none';results.classList.add('show');items.forEach(item=>{const a=document.createElement('a');a.className='command-result';a.href=item.url;const kind=document.createElement('span');kind.className='command-result-kind';kind.textContent=item.kind||'';const body=document.createElement('span');const title=document.createElement('strong');title.textContent=item.title||'';const meta=document.createElement('small');meta.textContent=item.meta||'';body.append(title,meta);a.append(kind,body);results.appendChild(a);});};
+  const doSearch=async(q)=>{if(q.length<2){renderResults([]);return;}try{const r=await fetch('{{ url_for("global_search") }}?q='+encodeURIComponent(q));const data=await r.json();renderResults(data.results||[]);}catch(e){renderResults([]);}};
+  input?.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>doSearch(input.value.trim()),160);});
+  input?.addEventListener('keydown',e=>{if(e.key==='Enter'){const first=results?.querySelector('.command-result');if(first){e.preventDefault();first.click();}else{const q=input.value.trim();if(q)location.href='{{ url_for("projects") }}?q='+encodeURIComponent(q);}}});
+  document.querySelectorAll('[data-command]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.command;const map={dashboard:'{{ url_for("dashboard") }}',projects:'{{ url_for("projects") }}',clients:'{{ url_for("clients") }}'{% if current_role=='admin' %},admin:'{{ url_for("admin") }}'{% endif %}};location.href=map[c]}));
+ });
+})();
+</script>
+</body>
+</html>
