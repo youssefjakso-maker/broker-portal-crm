@@ -1,6 +1,6 @@
-> **V17:** see `CHANGES_V17.txt` (Smart Match fix for wide price ranges + security hardening).
+﻿> **V17:** see `CHANGES_V17.txt` (Smart Match fix for wide price ranges + security hardening).
 
-# Broker Portal — Final Workspace Release
+# Broker Portal â€” Final Workspace Release
 
 A private real-estate brokerage workspace for Admins and Brokers. It combines the company's Excel inventory with Admin-created projects/units and a broker CRM in one application.
 
@@ -18,7 +18,7 @@ A private real-estate brokerage workspace for Admins and Brokers. It combines th
 - Rule-based, local recommendations grouped as Best Match, Good Alternatives, and Stretch Options, with reasons for each result.
 - Client Preferred Location is a dropdown populated from the currently active Excel inventory plus active Admin-created units. It uses the portal's controlled area labels and keeps Sheikh Zayed and New Zayed separate.
 - The workbook's `RES` unit category is represented in client qualification as `Residential (RES)`. It remains distinct from `Apartment`; the source does not label every `RES` row as an Apartment.
-- Budget flexibility: Strict = 90–130% of target; Flexible = 80–160%; Very Flexible = 70–180%.
+- Budget flexibility: Strict = 90â€“130% of target; Flexible = 80â€“160%; Very Flexible = 70â€“180%.
 - Preferred unit type and location are used in matching. Sheikh Zayed and New Zayed are separate areas; `zayed` maps to Sheikh Zayed, while `new zayed` remains New Zayed.
 - Space matching allows nearby sizes; very broad total-price ranges are excluded from recommendations rather than treated as exact matches.
 - Recommendations search the current published Excel inventory and active Admin-created units.
@@ -48,8 +48,8 @@ For a fresh database, the default accounts are:
 
 | Role | Email | Initial password |
 |---|---|---|
-| Admin | `admin@local` | `Admin123!` |
-| Broker | `broker@local` | `Broker123!` |
+| Admin | `admin@local` | Set during first-run setup |
+| Broker | `broker@local` | Set during first-run setup |
 
 New and reset broker passwords must be at least 10 characters. Existing databases keep their existing accounts and password hashes; the defaults are created only when the database has no Admin account.
 
@@ -73,8 +73,10 @@ This package is intended for a private LAN or private VPN. It is not configured 
 
 The included source workbook was checked with the current importer: 218 rows imported, 0 rejected, 0 serious errors, 2 warnings and 68 informational notes. Informational notes do not block publishing; serious errors do. Review the actual draft summary in Data Management before publishing any updated workbook.
 
-## Important operating notes
+## Open Source`r`n`r`nBroker Portal is an open-source CRM and inventory management project built around real-world brokerage workflows. The project focuses on role-based access control, client ownership, auditability, inventory management, Smart Match recommendations, and security-focused testing. Contributions, issues, and feedback are welcome.`r`n`r`n## Important operating notes
 
 - The payment calculator is indicative only. Always confirm the developer's current payment plan, fees, maintenance and availability before quoting a client.
 - Manual projects/units are part of the same broker inventory and recommendation search as the published Excel data, but are not deleted or replaced when Excel is republished.
 - This is a local internal workspace. Keep regular backups and restrict access to trusted team members.
+
+
